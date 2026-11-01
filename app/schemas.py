@@ -43,3 +43,9 @@ class LoteResponse(BaseModel):
     def status_prioridade(self) -> str:
         # Calculado a cada leitura: o status nunca fica desatualizado.
         return calcular_status_prioridade(self.data_vencimento)
+
+
+class ResumoResponse(BaseModel):
+    criticos: int
+    atencao: int
+    em_dia: int

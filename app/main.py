@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session
 
 from app.database import Base, engine, get_db
 from app.models import LoteEstoque
-from app.schemas import LoteCreate, LoteResponse
+from app.schemas import CATEGORIAS, LoteCreate, LoteResponse, ResumoResponse
+from app.services import calcular_resumo
 
 
 @asynccontextmanager
@@ -18,7 +19,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="ACEV Gestão - API",
     description="Backend FastAPI para controle de estoque e validade PEPS/FIFO da ACEV.",
-    version="1.0.0",
+    version="1.1.0",
     lifespan=lifespan,
 )
 
@@ -26,6 +27,11 @@ app = FastAPI(
 @app.get("/")
 def read_root():
     return {"message": "API da Associação Comunitária Esperança Viva (ACEV) em operação."}
+
+
+@app.get("/categorias/", response_model=list[str])
+def listar_categorias():
+    return list(CATEGORIAS)
 
 
 @app.post("/lotes/", response_model=LoteResponse, status_code=201)
@@ -41,3 +47,9 @@ def criar_lote(lote: LoteCreate, db: Session = Depends(get_db)):
 def listar_lotes(db: Session = Depends(get_db)):
     # Lotes que vencem primeiro aparecem primeiro (PEPS/FIFO)
     return db.query(LoteEstoque).order_by(LoteEstoque.data_vencimento.asc()).all()
+
+
+@app.get("/lotes/resumo", response_model=ResumoResponse)
+def resumo_lotes(db: Session = Depends(get_db)):
+    datas = [d for (d,) in db.query(LoteEstoque.data_vencimento).all()]
+    return calcular_resumo(datas)
