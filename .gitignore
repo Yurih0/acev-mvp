@@ -1,0 +1,23 @@
+# Ambiente virtual
+venv/
+.venv/
+env/
+
+# Variaveis de ambiente (nunca suba senhas!)
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+
+# Banco local de testes
+*.db
+*.sqlite3
+
+# Editores / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
