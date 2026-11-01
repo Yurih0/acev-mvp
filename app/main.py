@@ -1,6 +1,8 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import Depends, FastAPI
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.database import Base, engine, get_db
@@ -24,7 +26,15 @@ app = FastAPI(
 )
 
 
-@app.get("/")
+INDEX_HTML = Path(__file__).parent / "static" / "index.html"
+
+
+@app.get("/", include_in_schema=False)
+def interface():
+    return FileResponse(INDEX_HTML)
+
+
+@app.get("/saude")
 def read_root():
     return {"message": "API da Associação Comunitária Esperança Viva (ACEV) em operação."}
 

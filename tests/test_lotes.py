@@ -11,8 +11,9 @@ def novo_lote(client, categoria="Leguminosas", quantidade=1, dias=3):
     )
 
 
-def test_raiz(client):
-    assert client.get("/").status_code == 200
+def test_interface_e_saude(client):
+    assert "ACEV Gestão" in client.get("/").text
+    assert client.get("/saude").status_code == 200
 
 
 def test_status_prioridade():

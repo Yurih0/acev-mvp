@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#00602f">
+<title>ACEV Gestão</title>
+<style>
+:root{--verde:#00602f;--verde-claro:#e3f6e6;--vermelho:#c8001a;--rosa:#ffe9e6;--ambar:#7a5200;--amarelo:#f7c600;--creme:#fff4cc;--texto:#14201a;--suave:#51606a;--cinza:#eef2f7}
+*{box-sizing:border-box}
+body{margin:0;background:#dfe5ea;color:var(--texto);font:16px/1.4 "Segoe UI",system-ui,Arial,sans-serif}
+main{max-width:480px;min-height:100vh;margin:0 auto;background:#fff;display:flex;flex-direction:column}
+header{background:var(--verde);color:#fff;padding:16px 20px}
+header h1{margin:0;font-size:1.3rem}
+header p{margin:2px 0 0;font-size:.85rem;opacity:.9}
+section{flex:1;padding:20px;display:flex;flex-direction:column;gap:14px}
+section[hidden]{display:none}
+h2{margin:0;font-size:1.15rem}
+h2:focus{outline:none}
+.suave{color:var(--suave);font-size:.9rem;margin:0}
+.totais{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.total{background:var(--cinza);border-radius:12px;padding:12px 6px;text-align:center;font-size:.85rem}
+.total b{display:block;font-size:1.8rem;line-height:1.1}
+.criticos b{color:var(--vermelho)}.atencao b{color:var(--ambar)}.em_dia b{color:var(--verde)}
+ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+li.lote{border-left:6px solid;border-radius:12px;padding:12px 14px}
+li.Crítico{background:var(--rosa);border-color:var(--vermelho)}
+li.Atenção{background:var(--creme);border-color:var(--amarelo)}
+li.Em-dia{background:var(--verde-claro);border-color:var(--verde)}
+.selo{display:inline-block;border-radius:999px;padding:2px 10px;font-size:.78rem;font-weight:700;color:#fff;background:var(--verde)}
+.Crítico .selo{background:var(--vermelho)}.Atenção .selo{background:var(--amarelo);color:#14201a}
+.lote strong{display:block;margin:6px 0 2px;font-size:1.05rem}
+.lote span.d{font-size:.85rem;color:var(--suave)}
+form{display:flex;flex-direction:column;gap:6px}
+label{font-weight:700;margin-top:8px}
+input,select{min-height:48px;border:2px solid #c9d2dc;border-radius:12px;padding:0 14px;font:inherit;background:#fff}
+.btn{min-height:48px;border-radius:12px;border:2px solid var(--verde);font:inherit;font-weight:700;cursor:pointer;background:var(--verde);color:#fff;width:100%}
+.btn.sec{background:#fff;color:var(--verde)}
+:focus-visible{outline:3px solid #1a73e8;outline-offset:2px}
+.acoes{margin-top:auto;display:flex;flex-direction:column;gap:10px;padding-top:14px}
+.erro{background:var(--rosa);border-radius:12px;padding:10px 14px;color:var(--vermelho);font-weight:600}
+.erro:empty{display:none}
+.resumo{background:var(--cinza);border-radius:12px;padding:6px 16px;margin:0}
+.resumo div{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #d8dfe8}
+.resumo div:last-child{border:0}
+.resumo dt{color:var(--suave)}.resumo dd{margin:0;font-weight:700}
+.ok{width:64px;height:64px;border-radius:50%;background:var(--verde-claro);color:var(--verde);font-size:2rem;display:grid;place-items:center;margin:20px auto 0}
+#sucesso{text-align:center}
+</style>
+</head>
+<body>
+<main>
+<header><h1>ACEV Gestão</h1><p>Associação Comunitária Esperança Viva</p></header>
+
+<section id="painel">
+  <h2 tabindex="-1">Painel de alertas de validade</h2>
+  <p class="suave">Ordem PEPS/FIFO: primeiro que entra, primeiro que sai</p>
+  <div class="totais" aria-live="polite">
+    <div class="total criticos"><b id="n-criticos">0</b>Críticos</div>
+    <div class="total atencao"><b id="n-atencao">0</b>Atenção</div>
+    <div class="total em_dia"><b id="n-em_dia">0</b>Em dia</div>
+  </div>
+  <h2>Lotes por prioridade</h2>
+  <ul id="lista"></ul>
+  <p id="vazio" class="suave" hidden>Nenhum lote cadastrado ainda. Toque em “Novo lote de estoque” para começar.</p>
+  <div class="acoes">
+    <button class="btn" id="btn-novo">+ Novo lote de estoque</button>
+    <button class="btn sec" id="btn-benef">Consultar beneficiários</button>
+    <p id="aviso" class="suave" role="status"></p>
+  </div>
+</section>
+
+<section id="cadastro" hidden>
+  <h2 tabindex="-1">Cadastrar novo lote</h2>
+  <form id="form" novalidate>
+    <label for="categoria">Categoria do alimento *</label>
+    <select id="categoria" required><option value="">Selecione uma categoria</option></select>
+    <label for="quantidade">Quantidade (kg) *</label>
+    <input id="quantidade" type="number" inputmode="decimal" min="0.1" max="10000" step="0.1" required placeholder="Ex.: 30">
+    <label for="vencimento">Data de vencimento *</label>
+    <input id="vencimento" type="date" required>
+    <p class="suave">Essa data define a ordem de distribuição (PEPS/FIFO). Não pode estar no passado.</p>
+    <div id="erro" class="erro" role="alert"></div>
+    <div class="acoes">
+      <button class="btn" type="submit">Salvar lote</button>
+      <button class="btn sec" type="button" id="btn-cancelar">Cancelar</button>
+    </div>
+  </form>
+</section>
+
+<section id="sucesso" hidden>
+  <div class="ok" aria-hidden="true">✓</div>
+  <h2 tabindex="-1">Registro concluído com sucesso!</h2>
+  <p class="suave">O lote foi cadastrado e já aparece no painel.</p>
+  <dl class="resumo">
+    <div><dt>Lote</dt><dd id="r-cat"></dd></div>
+    <div><dt>Quantidade</dt><dd id="r-qtd"></dd></div>
+    <div><dt>Vencimento</dt><dd id="r-venc"></dd></div>
+  </dl>
+  <div class="acoes"><button class="btn" id="btn-voltar">Voltar ao painel inicial</button></div>
+</section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const dataBR = iso => iso.split("-").reverse().join("/");
+
+function mostrar(id) {
+  for (const s of document.querySelectorAll("section")) s.hidden = s.id !== id;
+  $(id).querySelector("h2").focus();
+}
+
+function diasAte(iso) {
+  const [a, m, d] = iso.split("-").map(Number);
+  const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+  return Math.round((new Date(a, m - 1, d) - hoje) / 864e5);
+}
+
+function textoPrazo(dias) {
+  if (dias < 0) return "Vencido";
+  if (dias === 0) return "Vence hoje";
+  return dias === 1 ? "Vence amanhã" : `Vence em ${dias} dias`;
+}
+
+async function carregarPainel() {
+  const [resumo, lotes] = await Promise.all([
+    fetch("/lotes/resumo").then(r => r.json()),
+    fetch("/lotes/").then(r => r.json()),
+  ]);
+  for (const k of ["criticos", "atencao", "em_dia"]) $("n-" + k).textContent = resumo[k];
+  const ul = $("lista"); ul.replaceChildren();
+  $("vazio").hidden = lotes.length > 0;
+  for (const l of lotes) {
+    const li = document.createElement("li");
+    li.className = "lote " + l.status_prioridade.replace(" ", "-");
+    const selo = Object.assign(document.createElement("span"), { className: "selo", textContent: l.status_prioridade });
+    const nome = Object.assign(document.createElement("strong"), { textContent: `${l.categoria} ${l.quantidade} kg` });
+    const det = Object.assign(document.createElement("span"), { className: "d",
+      textContent: `Lote #${String(l.id).padStart(4, "0")} · ${textoPrazo(diasAte(l.data_vencimento))} · ${dataBR(l.data_vencimento)}` });
+    li.append(selo, nome, det); ul.append(li);   // textContent evita injecao de HTML (XSS)
+  }
+}
+
+async function abrirPainel() { mostrar("painel"); await carregarPainel(); }
+
+$("btn-novo").onclick = () => { $("form").reset(); $("erro").textContent = ""; $("vencimento").min = new Date().toLocaleDateString("sv"); mostrar("cadastro"); };
+$("btn-cancelar").onclick = abrirPainel;
+$("btn-voltar").onclick = abrirPainel;
+$("btn-benef").onclick = () => { $("aviso").textContent = "A consulta de beneficiários ainda será implementada."; };
+
+$("form").onsubmit = async e => {
+  e.preventDefault();
+  const corpo = { categoria: $("categoria").value, quantidade: Number($("quantidade").value), data_vencimento: $("vencimento").value };
+  if (!corpo.categoria || !corpo.quantidade || !corpo.data_vencimento) { $("erro").textContent = "Preencha todos os campos marcados com *."; return; }
+  const r = await fetch("/lotes/", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(corpo) });
+  if (!r.ok) {
+    const d = await r.json();
+    $("erro").textContent = Array.isArray(d.detail) ? d.detail.map(x => x.msg.replace("Value error, ", "")).join(" ") : "Não foi possível salvar. Tente novamente.";
+    return;
+  }
+  $("r-cat").textContent = corpo.categoria; $("r-qtd").textContent = corpo.quantidade + " kg"; $("r-venc").textContent = dataBR(corpo.data_vencimento);
+  mostrar("sucesso");
+};
+
+(async () => {
+  const cats = await fetch("/categorias/").then(r => r.json());
+  for (const c of cats) $("categoria").append(new Option(c, c));
+  abrirPainel();
+})();
+</script>
+</body>
+</html>
