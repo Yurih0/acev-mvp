@@ -1,7 +1,9 @@
 from datetime import date
 from typing import Literal, get_args
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator
+
+from app.services import calcular_status_prioridade
 
 Categoria = Literal[
     "Grãos e Cereais",
@@ -35,4 +37,9 @@ class LoteResponse(BaseModel):
     categoria: str
     quantidade: float
     data_vencimento: date
-    status_prioridade: str
+
+    @computed_field
+    @property
+    def status_prioridade(self) -> str:
+        # Calculado a cada leitura: o status nunca fica desatualizado.
+        return calcular_status_prioridade(self.data_vencimento)

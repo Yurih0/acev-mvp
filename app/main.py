@@ -1,5 +1,4 @@
 from contextlib import asynccontextmanager
-from datetime import date
 
 from fastapi import Depends, FastAPI
 from sqlalchemy.orm import Session
@@ -24,18 +23,6 @@ app = FastAPI(
 )
 
 
-def calcular_status_prioridade(data_vencimento: date, hoje: date | None = None) -> str:
-    """Regra PEPS/FIFO: quanto mais perto do vencimento, maior a prioridade."""
-    hoje = hoje or date.today()
-    dias_restantes = (data_vencimento - hoje).days
-
-    if dias_restantes <= 0:
-        return "Crítico"
-    if dias_restantes <= 5:
-        return "Atenção"
-    return "Em dia"
-
-
 @app.get("/")
 def read_root():
     return {"message": "API da Associação Comunitária Esperança Viva (ACEV) em operação."}
@@ -43,12 +30,7 @@ def read_root():
 
 @app.post("/lotes/", response_model=LoteResponse, status_code=201)
 def criar_lote(lote: LoteCreate, db: Session = Depends(get_db)):
-    db_lote = LoteEstoque(
-        categoria=lote.categoria,
-        quantidade=lote.quantidade,
-        data_vencimento=lote.data_vencimento,
-        status_prioridade=calcular_status_prioridade(lote.data_vencimento),
-    )
+    db_lote = LoteEstoque(**lote.model_dump())
     db.add(db_lote)
     db.commit()
     db.refresh(db_lote)

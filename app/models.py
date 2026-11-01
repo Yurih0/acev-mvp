@@ -10,7 +10,6 @@ class LoteEstoque(Base):
     categoria = Column(String(100), nullable=False)
     quantidade = Column(Float, nullable=False)
     data_vencimento = Column(Date, nullable=False)
-    status_prioridade = Column(String(50), nullable=False)  # Crítico, Atenção, Em dia
 
 
 class Beneficiario(Base):

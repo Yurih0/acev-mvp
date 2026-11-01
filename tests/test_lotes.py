@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 
-from app.main import calcular_status_prioridade
+from app.services import calcular_status_prioridade
 
 
 def novo_lote(client, categoria="Leguminosas", quantidade=1, dias=3):
