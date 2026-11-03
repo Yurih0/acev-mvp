@@ -1,0 +1,27 @@
+name: CI
+
+# Roda a cada push e a cada Pull Request
+on:
+  push:
+  pull_request:
+
+jobs:
+  testes:
+    name: Testes automatizados (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o codigo
+        uses: actions/checkout@v4
+
+      - name: Instalar Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Instalar dependencias
+        run: pip install -r requirements-dev.txt
+
+      - name: Executar testes com pytest
+        run: pytest -v
